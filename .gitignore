@@ -15,7 +15,7 @@
 go.work
 
 # Build output
-ipmonitor
+/ipmonitor
 cmd/ipmonitor/ipmonitor
 /bin/
 /dist/

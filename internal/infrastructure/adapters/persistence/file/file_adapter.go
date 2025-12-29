@@ -11,8 +11,6 @@ import (
 	"github.com/giovanniandreuzza/ipmonitor/internal/domain/ip/valueobjects"
 )
 
-var ipFilePath = getIPStoragePath()
-
 func getIPStoragePath() string {
 	if p := os.Getenv("IP_STORAGE_PATH"); p != "" {
 		return p
@@ -21,28 +19,30 @@ func getIPStoragePath() string {
 }
 
 // Adapter implements IPRepository to persist IP state to file.
-type Adapter struct{}
+type Adapter struct {
+	ipFilePath string
+}
 
 var _ repositories.IPRepository = (*Adapter)(nil)
 
 // NewAdapter creates a new file persistence adapter.
 func NewAdapter() *Adapter {
-	return &Adapter{}
+	return &Adapter{ipFilePath: getIPStoragePath()}
 }
 
 // Save persists the IP monitor state to a file.
 func (a *Adapter) Save(state *entities.IPMonitorState) error {
 	ipValue := state.CurrentIP().Value()
-	dir := filepath.Dir(ipFilePath)
+	dir := filepath.Dir(a.ipFilePath)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return err
 	}
-	return os.WriteFile(ipFilePath, []byte(ipValue), 0o600)
+	return os.WriteFile(a.ipFilePath, []byte(ipValue), 0o600)
 }
 
 // Load retrieves the IP monitor state from a file.
 func (a *Adapter) Load() (*entities.IPMonitorState, error) {
-	data, err := os.ReadFile(ipFilePath)
+	data, err := os.ReadFile(a.ipFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil //nolint:nilnil // file not found is not an error, state is uninitialized

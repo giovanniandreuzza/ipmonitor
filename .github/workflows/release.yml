@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Run tests
+        run: go test -v ./test/...
+
+      - name: Build binaries
+        run: |
+          # Linux AMD64
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/ipmonitor-linux-amd64 ./cmd/ipmonitor
+          
+          # Linux ARM64
+          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/ipmonitor-linux-arm64 ./cmd/ipmonitor
+          
+          # Linux ARMv7 (Raspberry Pi)
+          GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="-s -w" -o dist/ipmonitor-linux-armv7 ./cmd/ipmonitor
+          
+          # macOS AMD64
+          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/ipmonitor-darwin-amd64 ./cmd/ipmonitor
+          
+          # macOS ARM64 (M1/M2)
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/ipmonitor-darwin-arm64 ./cmd/ipmonitor
+
+      - name: Create checksums
+        run: |
+          cd dist
+          sha256sum * > checksums.txt
+          cat checksums.txt
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          echo "## What's Changed" > CHANGELOG.md
+          git log --pretty=format:"* %s (%h)" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> CHANGELOG.md || echo "* Initial release" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo 'initial')...${{ github.ref_name }}" >> CHANGELOG.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: CHANGELOG.md
+          files: |
+            dist/ipmonitor-linux-amd64
+            dist/ipmonitor-linux-arm64
+            dist/ipmonitor-linux-armv7
+            dist/ipmonitor-darwin-amd64
+            dist/ipmonitor-darwin-arm64
+            dist/checksums.txt
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

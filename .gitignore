@@ -1,0 +1,52 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+
+# Build output
+ipmonitor
+cmd/ipmonitor/ipmonitor
+/bin/
+/dist/
+
+# Environment files
+.env
+.env.local
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+/tmp/
+*.tmp
+*.log
+
+# IP storage file (used during development)
+/tmp/public_ip.txt
+/tmp/public_ip.json
+public_ip.txt
+public_ip.json
+# CI/CD
+coverage.txt
+*.coverage
+gosec-results.sarif
+CHANGELOG.md

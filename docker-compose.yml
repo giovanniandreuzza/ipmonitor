@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  ipmonitor:
+    image: ghcr.io/giovanniandreuzza/ipmonitor:latest
+    container_name: ipmonitor
+    environment:
+      # Required: Your Telegram bot token from @BotFather
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      
+      # Required: Your Telegram chat ID from @userinfobot
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      
+      # Optional: Log level (DEBUG, INFO, WARN, ERROR)
+      - LOG_LEVEL=info
+    
+    volumes:
+      # Persist IP state across container restarts
+      - ipmonitor-data:/data
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Run every 5 minutes using cron in the container
+    # Alternatively, use a systemd timer or external scheduler
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5m
+        max_attempts: 3
+
+volumes:
+  ipmonitor-data:
+    driver: local

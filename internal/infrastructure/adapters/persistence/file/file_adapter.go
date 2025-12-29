@@ -1,0 +1,52 @@
+// Package file implements the IPRepository port using file persistence.
+package file
+
+import (
+	"os"
+	"strings"
+
+	"github.com/giovanniandreuzza/ipmonitor/internal/domain/ip/entities"
+	"github.com/giovanniandreuzza/ipmonitor/internal/domain/ip/repositories"
+	"github.com/giovanniandreuzza/ipmonitor/internal/domain/ip/valueobjects"
+)
+
+const ipFilePath = "/tmp/public_ip.txt"
+
+// Adapter implements IPRepository to persist IP state to file.
+type Adapter struct{}
+
+var _ repositories.IPRepository = (*Adapter)(nil)
+
+// NewAdapter creates a new file persistence adapter.
+func NewAdapter() *Adapter {
+	return &Adapter{}
+}
+
+// Save persists the IP monitor state to a file.
+func (a *Adapter) Save(state *entities.IPMonitorState) error {
+	ipValue := state.CurrentIP().Value()
+	return os.WriteFile(ipFilePath, []byte(ipValue), 0o600)
+}
+
+// Load retrieves the IP monitor state from a file.
+func (a *Adapter) Load() (*entities.IPMonitorState, error) {
+	data, err := os.ReadFile(ipFilePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil //nolint:nilnil // file not found is not an error, state is uninitialized
+		}
+		return nil, err
+	}
+
+	ipString := strings.TrimSpace(string(data))
+	if ipString == "" {
+		return nil, nil //nolint:nilnil // empty file means uninitialized state
+	}
+
+	ipv4, err := valueobjects.NewIPv4Address(ipString)
+	if err != nil {
+		return nil, err
+	}
+
+	return entities.NewIPMonitorState(ipv4), nil
+}

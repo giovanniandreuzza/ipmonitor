@@ -20,7 +20,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: "1.24"
           cache: true
 
       - name: Run tests
@@ -30,16 +30,16 @@ jobs:
         run: |
           # Linux AMD64
           GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/ipmonitor-linux-amd64 ./cmd/ipmonitor
-          
+
           # Linux ARM64
           GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/ipmonitor-linux-arm64 ./cmd/ipmonitor
-          
+
           # Linux ARMv7 (Raspberry Pi)
           GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="-s -w" -o dist/ipmonitor-linux-armv7 ./cmd/ipmonitor
-          
+
           # macOS AMD64
           GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/ipmonitor-darwin-amd64 ./cmd/ipmonitor
-          
+
           # macOS ARM64 (M1/M2)
           GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/ipmonitor-darwin-arm64 ./cmd/ipmonitor
 
@@ -58,7 +58,7 @@ jobs:
           echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo 'initial')...${{ github.ref_name }}" >> CHANGELOG.md
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           body_path: CHANGELOG.md
           files: |

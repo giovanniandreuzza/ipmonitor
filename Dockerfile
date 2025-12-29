@@ -15,8 +15,7 @@ COPY . .
 
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux go build \
-    -ldflags='-w -s -extldflags "-static"' \
-    -a -installsuffix cgo \
+    -ldflags="-w -s" \
     -o ipmonitor \
     ./cmd/ipmonitor
 

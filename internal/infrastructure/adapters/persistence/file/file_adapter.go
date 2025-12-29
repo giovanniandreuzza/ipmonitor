@@ -3,6 +3,7 @@ package file
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/giovanniandreuzza/ipmonitor/internal/domain/ip/entities"
@@ -10,7 +11,14 @@ import (
 	"github.com/giovanniandreuzza/ipmonitor/internal/domain/ip/valueobjects"
 )
 
-const ipFilePath = "/tmp/public_ip.txt"
+var ipFilePath = getIPStoragePath()
+
+func getIPStoragePath() string {
+	if p := os.Getenv("IP_STORAGE_PATH"); p != "" {
+		return p
+	}
+	return "/tmp/public_ip.txt"
+}
 
 // Adapter implements IPRepository to persist IP state to file.
 type Adapter struct{}
@@ -25,6 +33,10 @@ func NewAdapter() *Adapter {
 // Save persists the IP monitor state to a file.
 func (a *Adapter) Save(state *entities.IPMonitorState) error {
 	ipValue := state.CurrentIP().Value()
+	dir := filepath.Dir(ipFilePath)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return err
+	}
 	return os.WriteFile(ipFilePath, []byte(ipValue), 0o600)
 }
 
